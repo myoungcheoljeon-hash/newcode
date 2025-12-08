@@ -36,7 +36,8 @@ class AutomationEngine:
                     await context.add_cookies(json.loads(account.cookies_json))
                 
                 page = await context.new_page()
-                                # 1. Verify Login
+                try:
+                    # 1. Verify Login
                     await page.goto("https://www.naver.com")
                     if "nid.naver.com" in page.url or "login" in await page.content():
                         # Simple check, real check is if we see user info

@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 from app.database import create_db_and_tables
-from app.routers import accounts
+from app.routers import accounts, tasks
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
