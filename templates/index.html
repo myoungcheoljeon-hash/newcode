@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h1 style="margin-bottom: 0.5rem;">Dashboard</h1>
+            <p style="color: var(--text-secondary);">Manage your Naver accounts and automation tasks.</p>
+        </div>
+        <div>
+            <button onclick="showSection('accounts')" class="btn"
+                style="background:var(--bg-primary); border:1px solid var(--border); margin-right:0.5rem;">Accounts</button>
+            <button onclick="showSection('tasks')" class="btn"
+                style="background:var(--bg-primary); border:1px solid var(--border);">Tasks</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div
+        style="margin-top: 2rem; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+        <div class="card" style="margin:0; background: var(--bg-primary);">
+            <h3>Total Accounts</h3>
+            <p id="statsAccounts" style="font-size: 2rem; font-weight: 700; color: var(--accent);">0</p>
+        </div>
+        <div class="card" style="margin:0; background: var(--bg-primary);">
+            <h3>Total Tasks</h3>
+            <p id="statsTasks" style="font-size: 2rem; font-weight: 700; color: var(--success);">0</p>
+        </div>
+    </div>
+
+    <!-- Accounts Section -->
+    <div id="section-accounts">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h2>Connected Accounts</h2>
+            <button id="addAccountBtn" class="btn">
+                <svg style="width:20px;height:20px;margin-right:8px;" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Connect Account
+            </button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <th style="padding: 1rem;">ID</th>
+                        <th style="padding: 1rem;">Naver ID</th>
+                        <th style="padding: 1rem;">Nickname</th>
+                        <th style="padding: 1rem;">Status</th>
+                        <th style="padding: 1rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="accountsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tasks Section -->
+    <div id="section-tasks" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h2>Automation Tasks</h2>
+            <button onclick="openTaskModal()" class="btn">
+                <svg style="width:20px;height:20px;margin-right:8px;" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                New Task
+            </button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <th style="padding: 1rem;">ID</th>
+                        <th style="padding: 1rem;">Task Name</th>
+                        <th style="padding: 1rem;">Account</th>
+                        <th style="padding: 1rem;">Cafe URL</th>
+                        <th style="padding: 1rem;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tasksTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Task Modal -->
+<div id="taskModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100; justify-content:center; align-items:center;">
+    <div class="card"
+        style="width:500px; max-width:90%; border:1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+        <h2 style="margin-bottom:1rem;">Create New Task</h2>
+        <form id="createTaskForm">
+            <input type="text" id="taskName" class="input" placeholder="Task Name (e.g. My Daily Post)" required>
+            <select id="taskAccount" class="select" required>
+                <option value="">Select Account...</option>
+            </select>
+            <input type="url" id="taskUrl" class="input" placeholder="Board URL (e.g. https://cafe.naver.com/mycafe...)"
+                required>
+            <input type="text" id="taskBoardName" class="input" placeholder="Board Name (Optional)">
+            <textarea id="taskContent" class="input" style="height:100px;" placeholder="HTML Content or Plain Text"
+                required></textarea>
+
+            <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1rem;">
+                <button type="button" onclick="closeTaskModal()" class="btn"
+                    style="background:transparent; border:1px solid var(--border);">Cancel</button>
+                <button type="submit" class="btn">Create Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:999; justify-content:center; align-items:center; flex-direction:column;">
+    <div
+        style="width:50px; height:50px; border:4px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 1s linear infinite;">
+    </div>
+    <h3 style="margin-top:1rem; color:white;" id="loadingText">Processing...</h3>
+</div>
+
+<style>
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<script>
+    let accountsList = [];
+
+    function showSection(section) {
+        document.getElementById('section-accounts').style.display = section === 'accounts' ? 'block' : 'none';
+        document.getElementById('section-tasks').style.display = section === 'tasks' ? 'block' : 'none';
+    }
+
+    async function loadData() {
+        // Load Accounts
+        const accRes = await fetch('/accounts/');
+        accountsList = await accRes.json();
+        document.getElementById('statsAccounts').textContent = accountsList.length;
+
+        const accTbody = document.getElementById('accountsTableBody');
+        accTbody.innerHTML = '';
+
+        // Populate Account Select
+        const select = document.getElementById('taskAccount');
+        select.innerHTML = '<option value="">Select Account...</option>';
+
+        accountsList.forEach(acc => {
+            // Table Row
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border)';
+            tr.innerHTML = `
+            <td style="padding: 1rem;">#${acc.id}</td>
+            <td style="padding: 1rem; font-weight:600;">${acc.naver_id}</td>
+            <td style="padding: 1rem;">${acc.nickname || '-'}</td>
+            <td style="padding: 1rem;"><span class="badge badge-success">Active</span></td>
+            <td style="padding: 1rem;">
+                <!-- <button class="btn btn-danger" style="padding:0.5rem 1rem; font-size:0.8rem;">Remove</button> -->
+                <span style="color:var(--text-secondary); font-size:0.9rem;">Connected</span>
+            </td>
+        `;
+            accTbody.appendChild(tr);
+
+            // Select Option
+            const opt = document.createElement('option');
+            opt.value = acc.id;
+            opt.textContent = `${acc.nickname} (${acc.naver_id})`;
+            select.appendChild(opt);
+        });
+
+        if (accountsList.length === 0) accTbody.innerHTML = '<tr><td colspan="5" style="padding:2rem; text-align:center; color:var(--text-secondary);">No accounts.</td></tr>';
+
+        // Load Tasks
+        const tasksRes = await fetch('/tasks/');
+        const tasks = await tasksRes.json();
+        document.getElementById('statsTasks').textContent = tasks.length;
+
+        const taskTbody = document.getElementById('tasksTableBody');
+        taskTbody.innerHTML = '';
+
+        tasks.forEach(task => {
+            const acc = accountsList.find(a => a.id === task.account_id) || { nickname: 'Unknown' };
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border)';
+            tr.innerHTML = `
+            <td style="padding: 1rem;">#${task.id}</td>
+            <td style="padding: 1rem; font-weight:600;">${task.name}</td>
+            <td style="padding: 1rem;">${acc.nickname}</td>
+            <td style="padding: 1rem; color:var(--text-secondary); font-size:0.9rem;">${task.cafe_url.substring(0, 30)}...</td>
+            <td style="padding: 1rem;">
+                <button onclick="runTask(${task.id})" class="btn" style="padding:0.5rem 1rem; font-size:0.8rem; margin-right:0.5rem;">Run Now</button>
+                <button onclick="deleteTask(${task.id})" class="btn btn-danger" style="padding:0.5rem 1rem; font-size:0.8rem;">Delete</button>
+            </td>
+        `;
+            taskTbody.appendChild(tr);
+        });
+
+        if (tasks.length === 0) taskTbody.innerHTML = '<tr><td colspan="5" style="padding:2rem; text-align:center; color:var(--text-secondary);">No tasks created.</td></tr>';
+    }
+
+    function openTaskModal() {
+        document.getElementById('taskModal').style.display = 'flex';
+    }
+    function closeTaskModal() {
+        document.getElementById('taskModal').style.display = 'none';
+    }
+
+    document.getElementById('createTaskForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('taskName').value,
+            account_id: parseInt(document.getElementById('taskAccount').value),
+            cafe_url: document.getElementById('taskUrl').value,
+            board_name: document.getElementById('taskBoardName').value || 'Default',
+            content_html: document.getElementById('taskContent').value
+        };
+
+        try {
+            const res = await fetch('/tasks/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                closeTaskModal();
+                loadData();
+                e.target.reset();
+            } else {
+                alert("Failed to create task");
+            }
+        } catch (e) { alert(e); }
+    });
+
+    async function runTask(id) {
+        if (!confirm("Run this task now? It will open a browser window.")) return;
+        try {
+            await fetch(`/tasks/${id}/run`, { method: 'POST' });
+            alert("Task started in background! Watch the browser window.");
+        } catch (e) { alert(e); }
+    }
+
+    async function deleteTask(id) {
+        if (!confirm("Delete this task?")) return;
+        try {
+            await fetch(`/tasks/${id}`, { method: 'DELETE' });
+            loadData();
+        } catch (e) { alert(e); }
+    }
+
+    // Account Login
+    document.getElementById('addAccountBtn').addEventListener('click', async () => {
+        if (!confirm("A browser window will open. Please log in to Naver manually.\nThe system will capture your session once logged in.")) return;
+        document.getElementById('loadingText').textContent = "Waiting for Login...";
+        document.getElementById('loadingOverlay').style.display = 'flex';
+
+        try {
+            const response = await fetch('/accounts/login', { method: 'POST' });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                alert("Account added!");
+                loadData();
+            } else {
+                alert("Login failed.");
+            }
+        } catch (e) {
+            alert("Error: " + e);
+        } finally {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    });
+
+    // Initial Load
+    loadData();
+</script>
+{% endblock %}
