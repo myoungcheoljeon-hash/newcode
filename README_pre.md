@@ -53,18 +53,9 @@ playwright install chromium
 
 ### 4. 서버 실행
 ```bash
-# 로컬 개발 환경
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-# 또는 Python으로 직접 실행
-python main.py
+uvicorn main:app --reload
 ```
 서버가 실행되면 브라우저에서 **[http://127.0.0.1:8000](http://127.0.0.1:8000)** 으로 접속하세요.
-
-### 5. Render 배포 (선택사항)
-Render에 배포하려면 다음 명령어를 Build Command와 Start Command로 설정하세요:
-- **Build Command**: `pip install -r requirements.txt && playwright install chromium`
-- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ## 📖 사용 가이드
 
