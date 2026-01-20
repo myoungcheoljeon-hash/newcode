@@ -52,8 +52,9 @@ playwright install chromium
 ```
 
 ### 4. 서버 실행
+Windows 환경에서 Playwright 안정성을 위해 아래 명령어로 실행하세요.
 ```bash
-uvicorn main:app --reload
+python run.py
 ```
 서버가 실행되면 브라우저에서 **[http://127.0.0.1:8000](http://127.0.0.1:8000)** 으로 접속하세요.
 

@@ -27,6 +27,12 @@ def delete_task(task_id: int, session: Session = Depends(get_session)):
     task = session.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+        
+    # Manually delete associated logs first to avoid FK constraint/cascade issues
+    logs = session.exec(select(Log).where(Log.task_id == task_id)).all()
+    for log in logs:
+        session.delete(log)
+        
     session.delete(task)
     session.commit()
     return {"status": "success"}

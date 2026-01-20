@@ -15,6 +15,7 @@ class Account(SQLModel, table=True):
 class Task(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str 
+    title: str = Field(default=None, nullable=True) # Actual Post Title
     account_id: int = Field(foreign_key="account.id")
     cafe_url: str
     board_name: str # Name of the board to search/post to

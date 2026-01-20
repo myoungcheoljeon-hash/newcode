@@ -12,7 +12,9 @@
             <button onclick="showSection('accounts')" class="btn"
                 style="background:var(--bg-primary); border:1px solid var(--border); margin-right:0.5rem;">Accounts</button>
             <button onclick="showSection('tasks')" class="btn"
-                style="background:var(--bg-primary); border:1px solid var(--border);">Tasks</button>
+                style="background:var(--bg-primary); border:1px solid var(--border); margin-right:0.5rem;">Tasks</button>
+            <button onclick="launchBrowser()" class="btn"
+                style="background:var(--accent); border:none; color:white;">Open Pro Browser</button>
         </div>
     </div>
 
@@ -95,7 +97,10 @@
         style="width:500px; max-width:90%; border:1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
         <h2 style="margin-bottom:1rem;">Create New Task</h2>
         <form id="createTaskForm">
-            <input type="text" id="taskName" class="input" placeholder="Task Name (e.g. My Daily Post)" required>
+            <input type="text" id="taskName" class="input"
+                placeholder="Task Name (Internal Identifier, e.g. Morning Post)" required>
+            <input type="text" id="taskTitle" class="input" placeholder="Post Title (Actual title on Naver Cafe)"
+                required>
             <select id="taskAccount" class="select" required>
                 <option value="">Select Account...</option>
             </select>
@@ -160,10 +165,12 @@
             <td style="padding: 1rem;">#${acc.id}</td>
             <td style="padding: 1rem; font-weight:600;">${acc.naver_id}</td>
             <td style="padding: 1rem;">${acc.nickname || '-'}</td>
-            <td style="padding: 1rem;"><span class="badge badge-success">Active</span></td>
             <td style="padding: 1rem;">
-                <!-- <button class="btn btn-danger" style="padding:0.5rem 1rem; font-size:0.8rem;">Remove</button> -->
-                <span style="color:var(--text-secondary); font-size:0.9rem;">Connected</span>
+                <span id="status-${acc.id}" class="badge badge-success">Active (Unchecked)</span>
+            </td>
+            <td style="padding: 1rem;">
+                <button onclick="verifyAccount(${acc.id})" class="btn" style="padding:0.5rem 1rem; font-size:0.8rem; background:var(--bg-secondary); border:1px solid var(--border); margin-right:0.5rem;">Verify</button>
+                <button onclick="deleteAccount(${acc.id})" class="btn btn-danger" style="padding:0.5rem 1rem; font-size:0.8rem; background:#ef4444; color:white; border:none;">Delete</button>
             </td>
         `;
             accTbody.appendChild(tr);
@@ -217,6 +224,7 @@
         e.preventDefault();
         const data = {
             name: document.getElementById('taskName').value,
+            title: document.getElementById('taskTitle').value,
             account_id: parseInt(document.getElementById('taskAccount').value),
             cafe_url: document.getElementById('taskUrl').value,
             board_name: document.getElementById('taskBoardName').value || 'Default',
@@ -277,6 +285,60 @@
             document.getElementById('loadingOverlay').style.display = 'none';
         }
     });
+
+    // Verify Account
+    async function verifyAccount(id) {
+        const badge = document.getElementById(`status-${id}`);
+        badge.textContent = "Checking...";
+        badge.style.background = "var(--text-secondary)";
+
+        try {
+            const res = await fetch(`/accounts/${id}/verify`, { method: 'POST' });
+            const data = await res.json();
+
+            if (data.status === 'valid') {
+                badge.textContent = "Logged In";
+                badge.style.background = "var(--success)";
+                alert("Login Verified! You are ready to run tasks.");
+            } else {
+                badge.textContent = "Logged Out";
+                badge.style.background = "var(--accent)";
+                alert("Session Expired or Logged Out.\nPlease use 'Connect Account' to login again.");
+            }
+        } catch (e) {
+            badge.textContent = "Error";
+            alert("Verification failed: " + e);
+        }
+    }
+
+    async function deleteAccount(id) {
+        if (!confirm("Are you sure you want to delete this account?")) return;
+        try {
+            const res = await fetch(`/accounts/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadData();
+            } else {
+                const err = await res.json();
+                alert("Failed to delete: " + (err.detail || "Unknown error"));
+            }
+        } catch (e) {
+            alert("Error: " + e);
+        }
+    }
+
+    async function launchBrowser() {
+        if (!confirm("Open the Dedicated Automation Browser?\nPerformance and Login checks are best in this browser.")) return;
+        try {
+            console.log("Calling /accounts/open-dashboard");
+            const res = await fetch('/accounts/open-dashboard', { method: 'POST' });
+            if (!res.ok) throw new Error(`Server Error: ${res.status} ${res.statusText}`);
+            console.log("Response OK");
+            alert("Browser launching... Please check your taskbar.");
+        } catch (e) {
+            console.error(e);
+            alert("Error launching browser:\n" + e.message);
+        }
+    }
 
     // Initial Load
     loadData();

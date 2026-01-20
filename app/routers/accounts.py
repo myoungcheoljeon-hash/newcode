@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Account
 from playwright.async_api import async_playwright
+from app.engine import actions # Import the engine instance
 import json
 import asyncio
 
@@ -14,6 +15,37 @@ def list_accounts(request: Request, session: Session = Depends(get_session)):
     # In a real app, passing whole objects to template is fine for small scale
     # But usually we'd validate or serialize.
     return accounts
+
+@router.post("/{account_id}/verify")
+async def verify_account(account_id: int, session: Session = Depends(get_session)):
+    account = session.get(Account, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    is_valid = await actions.verify_session(account)
+    return {"status": "valid" if is_valid else "invalid", "account_id": account_id}
+
+@router.delete("/{account_id}")
+async def delete_account(account_id: int, session: Session = Depends(get_session)):
+    account = session.get(Account, account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    # Optional: Delete associated tasks or unassign them?
+    # For now, let's just delete the account. 
+    # If Task has foreign key with cascade, it handles itself. 
+    # If not, we might get integrity error. 
+    # Let's clean tasks first or set them to null.
+    # Actually, SQLAlchemy relationship cascade="all, delete" usually handles this if configured.
+    # But to be safe, we delete manually if we didn't config models heavily.
+    # Let's just try delete.
+    try:
+        session.delete(account)
+        session.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    return {"status": "success", "message": "Account deleted"}
 
 # Manual Login Logic
 @router.post("/login")
@@ -99,3 +131,8 @@ async def start_manual_login(session: Session = Depends(get_session)):
         await browser.close()
         raise HTTPException(status_code=408, detail="Login timeout or failed")
 
+@router.post("/open-dashboard")
+async def open_dashboard_ui(background_tasks: BackgroundTasks):
+    from app.engine import actions
+    background_tasks.add_task(actions.open_dashboard)
+    return {"status": "launching"}
