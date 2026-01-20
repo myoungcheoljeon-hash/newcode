@@ -36,4 +36,8 @@ async def read_root(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    import os
+    # Render에서는 PORT 환경 변수를 사용하고, 로컬에서는 8000 포트 사용
+    port = int(os.environ.get("PORT", 8000))
+    # 0.0.0.0으로 설정하여 외부 접근 허용 (Render 배포 필수)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

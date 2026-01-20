@@ -52,16 +52,10 @@ playwright install chromium
 ```
 
 ### 4. 서버 실행
-Windows 환경에서 Playwright 안정성을 위해 아래 명령어로 실행하세요.
 ```bash
 uvicorn main:app --reload
 ```
 서버가 실행되면 브라우저에서 **[http://127.0.0.1:8000](http://127.0.0.1:8000)** 으로 접속하세요.
-
-### 5. Render 배포 (선택사항)
-Render에 배포하려면 다음 명령어를 Build Command와 Start Command로 설정하세요:
-- **Build Command**: `pip install -r requirements.txt && playwright install chromium`
-- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ## 📖 사용 가이드
 
